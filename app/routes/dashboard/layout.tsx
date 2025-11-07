@@ -20,18 +20,25 @@ export async function loader(args: Route.LoaderArgs) {
     throw redirect("/sign-in");
   }
 
-  // Parallel data fetching to reduce waterfall
-  const [subscriptionStatus, user] = await Promise.all([
-    convexClient.query(api.subscriptions.checkUserSubscriptionStatus, { userId }),
-    createClerkClient({
-      secretKey: process.env.CLERK_SECRET_KEY,
-    }).users.getUser(userId)
-  ]);
+  // Get user from Clerk
+  const user = await createClerkClient({
+    secretKey: process.env.CLERK_SECRET_KEY,
+  }).users.getUser(userId);
 
+  // TODO: Temporarily disabled for local development testing
+  // Uncomment after configuring Convex environment variables
+  // See CONVEX-SETUP-GUIDE.md for instructions
+  
+  // Check subscription status (requires Convex environment variables)
+  // const subscriptionStatus = await convexClient.query(
+  //   api.subscriptions.checkUserSubscriptionStatus, 
+  //   { userId }
+  // );
+  
   // Redirect to subscription-required if no active subscription
-  if (!subscriptionStatus?.hasActiveSubscription) {
-    throw redirect("/subscription-required");
-  }
+  // if (!subscriptionStatus?.hasActiveSubscription) {
+  //   throw redirect("/subscription-required");
+  // }
 
   return { user };
 }
