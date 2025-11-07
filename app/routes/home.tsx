@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/react-router/ssr.server";
-import { fetchAction, fetchQuery } from "convex/nextjs";
+import { ConvexHttpClient } from "convex/browser";
 import ContentSection from "~/components/homepage/content";
 import Footer from "~/components/homepage/footer";
 import Integrations from "~/components/homepage/integrations";
@@ -7,6 +7,9 @@ import Pricing from "~/components/homepage/pricing";
 import Team from "~/components/homepage/team";
 import { api } from "../../convex/_generated/api";
 import type { Route } from "./+types/home";
+
+// Initialize Convex client for server-side usage
+const convexClient = new ConvexHttpClient(process.env.VITE_CONVEX_URL!);
 
 export function meta({}: Route.MetaArgs) {
   const title = "React Starter Kit - Launch Your SAAS Quickly";
@@ -55,24 +58,38 @@ export function meta({}: Route.MetaArgs) {
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
 
-  // Parallel data fetching to reduce waterfall
-  const [subscriptionData, plans] = await Promise.all([
-    userId
-      ? fetchQuery(api.subscriptions.checkUserSubscriptionStatus, {
-          userId,
-        }).catch((error) => {
-          console.error("Failed to fetch subscription data:", error);
-          return null;
-        })
-      : Promise.resolve(null),
-    fetchAction(api.subscriptions.getAvailablePlans),
-  ]);
+  try {
+    // Parallel data fetching to reduce waterfall
+    const [subscriptionData, plans] = await Promise.all([
+      userId
+        ? convexClient.query(api.subscriptions.checkUserSubscriptionStatus, {
+            userId,
+          }).catch((error) => {
+            console.error("Failed to fetch subscription data:", error);
+            return null;
+          })
+        : Promise.resolve(null),
+      convexClient.action(api.subscriptions.getAvailablePlans).catch((error) => {
+        console.error("Failed to fetch plans:", error);
+        // Return empty plans array on error so page can still load
+        return { items: [], pagination: { total: 0 } };
+      }),
+    ]);
 
-  return {
-    isSignedIn: !!userId,
-    hasActiveSubscription: subscriptionData?.hasActiveSubscription || false,
-    plans,
-  };
+    return {
+      isSignedIn: !!userId,
+      hasActiveSubscription: subscriptionData?.hasActiveSubscription || false,
+      plans,
+    };
+  } catch (error) {
+    console.error("Error in home loader:", error);
+    // Return safe defaults if everything fails
+    return {
+      isSignedIn: !!userId,
+      hasActiveSubscription: false,
+      plans: { items: [], pagination: { total: 0 } },
+    };
+  }
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {

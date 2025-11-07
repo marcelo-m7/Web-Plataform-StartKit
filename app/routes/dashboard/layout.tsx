@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/react-router/ssr.server";
-import { fetchQuery } from "convex/nextjs";
+import { ConvexHttpClient } from "convex/browser";
 import { redirect, useLoaderData } from "react-router";
 import { AppSidebar } from "~/components/dashboard/app-sidebar";
 import { SiteHeader } from "~/components/dashboard/site-header";
@@ -8,6 +8,9 @@ import { api } from "../../../convex/_generated/api";
 import type { Route } from "./+types/layout";
 import { createClerkClient } from "@clerk/react-router/api.server";
 import { Outlet } from "react-router";
+
+// Initialize Convex client for server-side usage
+const convexClient = new ConvexHttpClient(process.env.VITE_CONVEX_URL!);
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -19,7 +22,7 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Parallel data fetching to reduce waterfall
   const [subscriptionStatus, user] = await Promise.all([
-    fetchQuery(api.subscriptions.checkUserSubscriptionStatus, { userId }),
+    convexClient.query(api.subscriptions.checkUserSubscriptionStatus, { userId }),
     createClerkClient({
       secretKey: process.env.CLERK_SECRET_KEY,
     }).users.getUser(userId)
