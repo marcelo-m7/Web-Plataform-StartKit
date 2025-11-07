@@ -45,10 +45,12 @@ A modern, production-ready SaaS starter template for building full-stack React a
 ### Prerequisites
 
 - Node.js 18+ 
+- Convex account (cloud or self-hosted)
 - Clerk account for authentication
-- Convex account for database
 - Polar.sh account for subscriptions
 - OpenAI API key (for AI chat features)
+
+> **📖 For detailed environment setup, see [ENVIRONMENT.md](./ENVIRONMENT.md)**
 
 ### Installation
 
@@ -64,38 +66,56 @@ npm install
 cp .env.example .env.local
 ```
 
+> **⚠️ Important:** See [ENVIRONMENT.md](./ENVIRONMENT.md) for complete environment variable documentation.
+
 3. Set up your environment variables in `.env.local`:
 
+**Self-Hosted Convex:**
 ```bash
-# Convex Configuration
-CONVEX_DEPLOYMENT=your_convex_deployment_here
-VITE_CONVEX_URL=your_convex_url_here
+# Convex Self-Hosted
+VITE_CONVEX_URL=https://backend.yourdomain.com
+CONVEX_SELF_HOSTED_URL=https://backend.yourdomain.com
+CONVEX_SELF_HOSTED_ADMIN_KEY=self-hosted-convex|your_admin_key
 
 # Clerk Authentication
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
-CLERK_SECRET_KEY=your_clerk_secret_key_here
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key
+VITE_CLERK_FRONTEND_API_URL=https://clerk.yourdomain.com
+CLERK_SECRET_KEY=sk_live_your_secret
 
-# Polar.sh Configuration
-POLAR_ACCESS_TOKEN=your_polar_access_token_here
-POLAR_ORGANIZATION_ID=your_polar_organization_id_here
-POLAR_WEBHOOK_SECRET=your_polar_webhook_secret_here
+# Polar.sh Payments
+POLAR_SERVER=production
+POLAR_ACCESS_TOKEN=polar_oat_your_token
+POLAR_ORGANIZATION_ID=your_org_id
+POLAR_WEBHOOK_SECRET=polar_whs_your_secret
 
-# OpenAI Configuration (for AI chat)
-OPENAI_API_KEY=your_openai_api_key_here
+# Application
+FRONTEND_URL=https://yourdomain.com
 
-# Frontend URL for redirects
-FRONTEND_URL=http://localhost:5173
+# OpenAI
+OPENAI_API_KEY=sk-proj-your_key
+```
+
+**Cloud-Hosted Convex (Alternative):**
+```bash
+# Use this instead of self-hosted variables
+CONVEX_DEPLOYMENT=prod:your-deployment
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
 ```
 
 4. Initialize Convex:
 
 ```bash
+# For self-hosted Convex
+npx convex dev
+
+# For cloud-hosted Convex
 npx convex dev
 ```
 
 5. Set up your Polar.sh webhook endpoint:
-   - URL: `{your_domain}/webhook/polar`
-   - Events: All subscription events
+   - **URL:** `https://backend.yourdomain.com/webhook/polar`
+   - **Events:** All subscription and checkout events
+   - See [ENVIRONMENT.md](./ENVIRONMENT.md) for webhook configuration details
 
 ### Development
 

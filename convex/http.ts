@@ -93,7 +93,7 @@ http.route({
 });
 
 http.route({
-  path: "/payments/webhook",
+  path: "/webhook/polar",
   method: "POST",
   handler: paymentWebhook,
 });
